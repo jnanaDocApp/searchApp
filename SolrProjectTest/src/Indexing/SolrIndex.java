@@ -1,6 +1,5 @@
 package Indexing;
 
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -25,7 +24,6 @@ import org.apache.tika.sax.BodyContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
-
 public class SolrIndex {
 
 	private static HttpSolrServer solr;
@@ -36,26 +34,18 @@ public class SolrIndex {
 		
 		try {
 			 solr = new HttpSolrServer("http://localhost:8983/solr/star");
-
-			
-			solr.deleteByQuery( "*:*" );
-			
+			 
+			solr.deleteByQuery( "*:*" );			
 			String[] folderPaths={"C:\\newFiles\\"};
 			
-			for(int j=0;j<folderPaths.length;j++){
-				
+			for(int j=0;j<folderPaths.length;j++){				
 			File folder = new File(folderPaths[j]);
-			System.out.println(folderPaths[j]);
-			
-			
-			File[] listOfFiles = folder.listFiles();
-			
+			System.out.println(folderPaths[j]);			
+			File[] listOfFiles = folder.listFiles();			
 			for (int i = 0; i < listOfFiles.length; i++) {
 				if (listOfFiles[i].isFile()) {
 					String myFilePath = listOfFiles[i].getAbsolutePath();
 					String myFileName = listOfFiles[i].getName();
-					
-					
 					processDocument(myFilePath, myFileName);  
 				} else if (listOfFiles[i].isDirectory()) {		    	  
 					myFilesToIndex.add(listOfFiles[i].getAbsolutePath());
@@ -64,11 +54,9 @@ public class SolrIndex {
 			
 
 			while(!myFilesToIndex.isEmpty()){
-				//System.out.println(listOfFiles.length);
 				folder = new File(myFilesToIndex.get(0));
 				getFileNames(folder.listFiles());
 				myFilesToIndex.remove(0);
-				
 			}
 			}
 			
@@ -81,7 +69,6 @@ public class SolrIndex {
 	
 		}		
 	}
- 
 
 
 	private static void getFileNames(File[] listFiles) {
@@ -91,7 +78,6 @@ public class SolrIndex {
 				String myFileName = listFiles[i].getName();
 				if(myFileName.contains(myFileName))
 				{
-					//System.out.println(myFileName);
 				}
 				processDocument(myFilePath,myFileName);  
 			} else if (listFiles[i].isDirectory()) {		    	  

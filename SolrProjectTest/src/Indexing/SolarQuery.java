@@ -1,7 +1,7 @@
 package Indexing;
 
 
-import java.net.MalformedURLException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,7 +13,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -27,11 +26,11 @@ import com.google.gson.Gson;
 
 public class SolarQuery {
 
-	public static List<QueryResultBean> queryMySolr(String keyword) throws MalformedURLException {
+	public static List<QueryResultBean> queryMySolr(String keyword) throws IOException {
 		QueryResultBean myResultBean = null;
 		List<QueryResultBean> myResultBeanList = new ArrayList<QueryResultBean>();
 
-		SolrServer solr = new HttpSolrServer("http://localhost:8983/solr/star/"); 
+		HttpSolrServer solrClient=new HttpSolrServer("http://localhost:8983/solr/star/");
 		SolrQuery sq = new SolrQuery();
 		Gson gson = new Gson();
 		String key = keyword;
@@ -48,7 +47,7 @@ public class SolarQuery {
 		myLabelList.add("content");	
 		try {
 			
-			 QueryResponse response = solr.query(sq);
+			 QueryResponse response = solrClient.query(sq);
 			 
 			// Map<String,List<String>>=response.getsu
 			
@@ -207,7 +206,7 @@ public class SolarQuery {
 				i--;
 			}
 		}
-		System.out.println(myContent);
+		//System.out.println(myContent);
 		myContent = myContent.replaceAll(myKey, "<b>"+myKey+"</b>");
 		return myContent;
 
@@ -215,9 +214,5 @@ public class SolarQuery {
 
 	}
 	
-	public static void main(String[] args) throws MalformedURLException {
-		
 	
-		SolarQuery.queryMySolr("over");
-	}
 }

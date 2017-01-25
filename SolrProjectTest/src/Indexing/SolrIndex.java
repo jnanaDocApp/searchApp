@@ -3,13 +3,15 @@ package Indexing;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.io.FilenameUtils;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.UpdateResponse;
@@ -30,8 +32,8 @@ public class SolrIndex {
 	static UpdateRequest req = new UpdateRequest(); 
 	static List<String> myFilesToIndex = new ArrayList<String>();
 
-	public static void main(String[] args) throws IOException, SAXException, TikaException {
-		
+	public static void main(String[] args) throws IOException, SAXException, TikaException, SolrServerException {
+		long startTime = System.nanoTime();
 		try {
 			 solr = new HttpSolrServer("http://localhost:8983/solr/star");
 			 
@@ -40,7 +42,7 @@ public class SolrIndex {
 			
 			for(int j=0;j<folderPaths.length;j++){				
 			File folder = new File(folderPaths[j]);
-			System.out.println(folderPaths[j]);			
+			//System.out.println(folderPaths[j]);			
 			File[] listOfFiles = folder.listFiles();			
 			for (int i = 0; i < listOfFiles.length; i++) {
 				if (listOfFiles[i].isFile()) {
@@ -65,9 +67,14 @@ public class SolrIndex {
 			
 		}
 		catch  (Exception ex) {
-			System.out.println(ex.getMessage());
+			//System.out.println(ex.getMessage());
 	
-		}		
+		}	
+		
+		long endTime = System.nanoTime();
+		System.out.println("Took :"+(endTime - startTime) + " ns"); 
+		System.out.println("Took "+TimeUnit.MINUTES.convert((endTime - startTime), TimeUnit.NANOSECONDS)+" minutes to index");
+		solr.commit();
 	}
 
 
@@ -92,8 +99,8 @@ public class SolrIndex {
 	private static void processDocument(String pathfilename, String myFileName)  {
 
 		try {
-			
-			InputStream input = new FileInputStream(new File(pathfilename));			
+			 //parse method parameters
+			FileInputStream input = new FileInputStream(new File(pathfilename));			
 			ContentHandler textHandler = new BodyContentHandler(10*1024*1024);
 			Metadata meta = new Metadata();
 			Parser parser = new AutoDetectParser(); 
@@ -103,22 +110,24 @@ public class SolrIndex {
 			
 			UUID guid = java.util.UUID.randomUUID();
 			String docid = guid.toString();
-			System.out.println(docid);
+			//System.out.println(docid);
 			String doctitle = myFileName;
-			System.out.println(doctitle);
+			//System.out.println(doctitle);
 			String fileName = FilenameUtils.removeExtension(doctitle);
-			System.out.println(fileName);
+			//System.out.println(fileName);
 			String docurl = pathfilename;
-			System.out.println(docurl);
+			//System.out.println(docurl);
 			String doccontent = textHandler.toString();
 			String textOrg=doccontent.toLowerCase().replace("\n", " ");
 			String trimContent=textOrg.replaceAll("\\.+",".").replaceAll("\\-+", "-");
-			if(trimContent==null){	
+			
+			if(trimContent==null||trimContent.isEmpty()){	
 				trimContent=doctitle;
+				//System.out.println("---------------content was empty----------");
 			}
 			String author=meta.get(TikaCoreProperties.CREATOR);
-			if(author==null){
-				author="no author";
+			if(author==null||author.isEmpty()){
+				author="No Author";
 			}
 			String dateFormat="";
 			Date date=meta.getDate(TikaCoreProperties.MODIFIED);
@@ -128,10 +137,9 @@ public class SolrIndex {
 			else{
 			 dateFormat=new SimpleDateFormat("dd-MMM-yyyy").format(date);
 			}
-			System.out.println("date :  "+date);
-			System.out.println(author);
+			//System.out.println("date :  "+date);
+			//System.out.println(author);
 			
-			//String author = "no author";
 			String size = "size";
 			//call to index
 			indexDocument(docid, doctitle, author, docurl, trimContent, size,dateFormat,fileName);
@@ -156,11 +164,11 @@ public class SolrIndex {
 			req.setAction( UpdateRequest.ACTION.COMMIT, false, false );
 			req.add( doc ); 
 			 UpdateResponse resp  = solr.add(doc);	
-			 solr.commit();
+			 //solr.commit();
 			 System.out.println("STATUS  :  "+resp.getStatus());
 		} 
 		catch (Exception ex) {
-			System.out.println("error :"+ex.getMessage());
+			//System.out.println("error :"+ex.getMessage());
 		}
 	}	
 }
